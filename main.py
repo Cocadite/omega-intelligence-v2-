@@ -31,7 +31,7 @@ async def load_one(client,item):
     try:
         if group=="crypto":
             errors=[]
-            for host in ("data-api.binance.vision","api.binance.com","api.binance.us"):
+            for host in ("data-api.binance.vision","api.binance.com"):
                 try:
                     r=await client.get("https://"+host+"/api/v3/klines",params={"symbol":ticker,"interval":"1h","limit":80})
                     r.raise_for_status()
@@ -40,8 +40,11 @@ async def load_one(client,item):
                     errors.append(str(e))
             else:
                 raise ValueError("Crypto indisponível: "+"; ".join(errors)[:100])
-            values=[float(x[4]) for x in r.json()]
-            source="Binance • candles 1h"
+            payload=r.json()
+            if not isinstance(payload,list) or len(payload)<20:
+                raise ValueError("Resposta inválida da Binance")
+            values=[float(x[4]) for x in payload]
+            source="Binance Spot • candles 1h"
         else:
             errors=[]
             for host in ("query1.finance.yahoo.com","query2.finance.yahoo.com"):
